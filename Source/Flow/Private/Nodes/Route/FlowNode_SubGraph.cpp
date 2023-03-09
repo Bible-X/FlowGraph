@@ -103,23 +103,23 @@ FString UFlowNode_SubGraph::GetNodeDescription() const
 
 UObject* UFlowNode_SubGraph::GetAssetToEdit()
 {
-	return Asset.IsNull() ? nullptr : LoadAsset<UObject>(Asset);
+	return Asset.IsNull() ? nullptr : Asset.LoadSynchronous();
 }
 
 EDataValidationResult UFlowNode_SubGraph::ValidateNode()
 {
 	if (Asset.IsNull())
 	{
-		Log.Error<UFlowNode>(TEXT("Flow Asset not assigned or invalid!"), this);
+		ValidationLog.Error<UFlowNode>(TEXT("Flow Asset not assigned or invalid!"), this);
 		return EDataValidationResult::Invalid;
 	}
 
 	return EDataValidationResult::Valid;
 }
 
-TArray<FName> UFlowNode_SubGraph::GetContextInputs()
+TArray<FFlowPin> UFlowNode_SubGraph::GetContextInputs()
 {
-	TArray<FName> EventNames;
+	TArray<FFlowPin> EventNames;
 
 	if (!Asset.IsNull())
 	{
@@ -136,9 +136,9 @@ TArray<FName> UFlowNode_SubGraph::GetContextInputs()
 	return EventNames;
 }
 
-TArray<FName> UFlowNode_SubGraph::GetContextOutputs()
+TArray<FFlowPin> UFlowNode_SubGraph::GetContextOutputs()
 {
-	TArray<FName> EventNames;
+	TArray<FFlowPin> Pins;
 
 	if (!Asset.IsNull())
 	{
@@ -147,12 +147,12 @@ TArray<FName> UFlowNode_SubGraph::GetContextOutputs()
 		{
 			if (!PinName.IsNone())
 			{
-				EventNames.Emplace(PinName);
+				Pins.Emplace(PinName);
 			}
 		}
 	}
 
-	return EventNames;
+	return Pins;
 }
 
 void UFlowNode_SubGraph::PostLoad()

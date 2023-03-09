@@ -26,8 +26,6 @@ public:
 	IFlowGraphInterface() {}
 	virtual ~IFlowGraphInterface() {}
 
-	virtual void RefreshGraph(UFlowAsset* FlowAsset) {}
-
 	virtual void OnInputTriggered(UEdGraphNode* GraphNode, const int32 Index) const {}
 	virtual void OnOutputTriggered(UEdGraphNode* GraphNode, const int32 Index) const {}
 };
@@ -42,7 +40,6 @@ UCLASS(BlueprintType, hideCategories = Object)
 class FLOW_API UFlowAsset : public UObject
 {
 	GENERATED_UCLASS_BODY()
-
 	friend class UFlowNode;
 	friend class UFlowNode_CustomOutput;
 	friend class UFlowNode_SubGraph;
@@ -58,7 +55,7 @@ class FLOW_API UFlowAsset : public UObject
 	// This allow to SaveGame support works properly, if owner of Root Flow would be Game Instance or its subsystem
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	bool bWorldBound;
-	
+
 //////////////////////////////////////////////////////////////////////////
 // Graph
 
@@ -76,6 +73,7 @@ class FLOW_API UFlowAsset : public UObject
 
 	// IFlowGraphInterface
 #if WITH_EDITORONLY_DATA
+
 private:
 	UPROPERTY()
 	UEdGraph* FlowGraph;
@@ -96,7 +94,7 @@ public:
 // Nodes
 
 protected:
-	TArray<TSubclassOf<UFlowNode>> AllowedNodeClasses;	
+	TArray<TSubclassOf<UFlowNode>> AllowedNodeClasses;
 	TArray<TSubclassOf<UFlowNode>> DeniedNodeClasses;
 
 	bool bStartNodePlacedAsGhostNode;
@@ -133,23 +131,25 @@ public:
 #endif
 
 	TMap<FGuid, UFlowNode*> GetNodes() const { return Nodes; }
-    UFlowNode* GetNode(const FGuid& Guid) const { return Nodes.FindRef(Guid); }
+	UFlowNode* GetNode(const FGuid& Guid) const { return Nodes.FindRef(Guid); }
 
-    template <class T>
-    T* GetNode(const FGuid& Guid) const
-    {
-        static_assert(TPointerIsConvertibleFromTo<T, const UFlowNode>::Value, "'T' template parameter to GetNode must be derived from UFlowNode");
-        
-        if (UFlowNode* Node = Nodes.FindRef(Guid))
-        {
-            return Cast<T>(Node);
-        }
+	template <class T>
+	T* GetNode(const FGuid& Guid) const
+	{
+		static_assert(TPointerIsConvertibleFromTo<T, const UFlowNode>::Value, "'T' template parameter to GetNode must be derived from UFlowNode");
 
-        return nullptr;
-    }
+		if (UFlowNode* Node = Nodes.FindRef(Guid))
+		{
+			return Cast<T>(Node);
+		}
+
+		return nullptr;
+	}
 
 	TArray<FName> GetCustomInputs() const { return CustomInputs; }
 	TArray<FName> GetCustomOutputs() const { return CustomOutputs; }
+
+	UFlowNode_Start* GetStartNode() const;
 
 //////////////////////////////////////////////////////////////////////////
 // Instances of the template asset
@@ -161,6 +161,9 @@ private:
 
 #if WITH_EDITORONLY_DATA
 	TWeakObjectPtr<UFlowAsset> InspectedInstance;
+
+	// Message log for storing runtime errors/notes/warnings that will only last until the next game run
+	TSharedPtr<class FFlowMessageLog> RuntimeLog;
 #endif
 
 public:
@@ -177,11 +180,18 @@ public:
 	UFlowAsset* GetInspectedInstance() const { return InspectedInstance.IsValid() ? InspectedInstance.Get() : nullptr; }
 
 	DECLARE_EVENT(UFlowAsset, FRefreshDebuggerEvent);
+
 	FRefreshDebuggerEvent& OnDebuggerRefresh() { return RefreshDebuggerEvent; }
 	FRefreshDebuggerEvent RefreshDebuggerEvent;
 
+	DECLARE_EVENT_TwoParams(UFlowAsset, FRuntimeMessageEvent, const UFlowAsset*, const TSharedRef<FTokenizedMessage>&);
+
+	FRuntimeMessageEvent& OnRuntimeMessageAdded() { return RuntimeMessageEvent; }
+	FRuntimeMessageEvent RuntimeMessageEvent;
+
 private:
-	void BroadcastDebuggerRefresh() const { RefreshDebuggerEvent.Broadcast(); }
+	void BroadcastDebuggerRefresh() const;
+	void BroadcastRuntimeMessageAdded(const UFlowAsset* AssetInstance, const TSharedRef<FTokenizedMessage>& Message) const;;
 #endif
 
 //////////////////////////////////////////////////////////////////////////
@@ -227,14 +237,14 @@ public:
 	virtual void DeinitializeInstance();
 
 	UFlowAsset* GetTemplateAsset() const { return TemplateAsset; }
-	
+
 	// Object that spawned Root Flow instance, i.e. World Settings or Player Controller
 	// This pointer is passed to child instances: Flow Asset instances created by the SubGraph nodes
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	UObject* GetOwner() const { return Owner.Get(); }
 
 	template <class T>
-	TWeakObjectPtr<T*> GetOwner() const
+	TWeakObjectPtr<T> GetOwner() const
 	{
 		return Owner.IsValid() ? Cast<T>(Owner) : nullptr;
 	}
@@ -243,7 +253,7 @@ public:
 
 	virtual void PreStartFlow();
 	virtual void StartFlow();
-	
+
 	virtual void FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance = true);
 
 	// Get Flow Asset instance created by the given SubGraph node
@@ -277,9 +287,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	TArray<UFlowNode*> GetRecordedNodes() const { return RecordedNodes; }
 
+#if WITH_EDITOR
+	void LogError(const FString& MessageToLog, UFlowNode* Node) const;
+	void LogWarning(const FString& MessageToLog, UFlowNode* Node) const;
+	void LogNote(const FString& MessageToLog, UFlowNode* Node) const;
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // SaveGame
-	
+
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
 	FFlowAssetSaveData SaveInstance(TArray<FFlowAssetSaveData>& SavedFlowInstances);
 
@@ -292,11 +308,11 @@ private:
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnSave();
-	
+
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnLoad();
 
-public:	
+public:
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	bool IsBoundToWorld();
 };

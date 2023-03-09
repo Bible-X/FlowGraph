@@ -11,7 +11,6 @@
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
-#include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "UObject/UObjectHash.h"
 
@@ -102,7 +101,7 @@ UFlowAsset* UFlowSubsystem::CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset
 void UFlowSubsystem::FinishRootFlow(UObject* Owner, UFlowAsset* TemplateAsset, const EFlowFinishPolicy FinishPolicy)
 {
 	UFlowAsset* InstanceToFinish = nullptr;
-	
+
 	for (TPair<UFlowAsset*, TWeakObjectPtr<UObject>>& RootInstance : RootInstances)
 	{
 		if (Owner && Owner == RootInstance.Value.Get() && RootInstance.Key && RootInstance.Key->GetTemplateAsset() == TemplateAsset)
@@ -122,7 +121,7 @@ void UFlowSubsystem::FinishRootFlow(UObject* Owner, UFlowAsset* TemplateAsset, c
 void UFlowSubsystem::FinishAllRootFlows(UObject* Owner, const EFlowFinishPolicy FinishPolicy)
 {
 	TArray<UFlowAsset*> InstancesToFinish;
-	
+
 	for (TPair<UFlowAsset*, TWeakObjectPtr<UObject>>& RootInstance : RootInstances)
 	{
 		if (Owner && Owner == RootInstance.Value.Get() && RootInstance.Key)
@@ -195,7 +194,7 @@ UFlowAsset* UFlowSubsystem::CreateFlowInstance(const TWeakObjectPtr<UObject> Own
 		FlowAsset = Cast<UFlowAsset>(Streamable.LoadSynchronous(FlowAsset.ToSoftObjectPath(), false));
 	}
 
-	InstancedTemplates.Add(FlowAsset.Get());
+	AddInstancedTemplate(FlowAsset.Get());
 
 #if WITH_EDITOR
 	if (GetWorld()->WorldType != EWorldType::Game)
@@ -219,8 +218,24 @@ UFlowAsset* UFlowSubsystem::CreateFlowInstance(const TWeakObjectPtr<UObject> Own
 	return NewInstance;
 }
 
+void UFlowSubsystem::AddInstancedTemplate(UFlowAsset* Template)
+{
+	if (!InstancedTemplates.Contains(Template))
+	{
+		InstancedTemplates.Add(Template);
+
+#if WITH_EDITOR
+		Template->RuntimeLog = MakeShareable(new FFlowMessageLog());
+#endif
+	}
+}
+
 void UFlowSubsystem::RemoveInstancedTemplate(UFlowAsset* Template)
 {
+#if WITH_EDITOR
+	Template->RuntimeLog.Reset();
+#endif
+
 	InstancedTemplates.Remove(Template);
 }
 

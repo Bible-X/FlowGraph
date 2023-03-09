@@ -7,12 +7,10 @@
 #include "FlowAsset.h"
 #include "FlowGraph.generated.h"
 
-class FLOWEDITOR_API FFlowGraphInterface final : public IFlowGraphInterface
+class FLOWEDITOR_API FFlowGraphInterface : public IFlowGraphInterface
 {
 public:
 	virtual ~FFlowGraphInterface() override {}
-
-	virtual void RefreshGraph(UFlowAsset* FlowAsset) override;
 
 	virtual void OnInputTriggered(UEdGraphNode* GraphNode, const int32 Index) const override;
 	virtual void OnOutputTriggered(UEdGraphNode* GraphNode, const int32 Index) const override;
