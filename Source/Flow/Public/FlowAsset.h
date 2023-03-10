@@ -123,8 +123,8 @@ public:
 
 	UFlowNode* CreateNode(const UClass* NodeClass, UEdGraphNode* GraphNode);
 
-	void RegisterNode(const FGuid& NewGuid, UFlowNode* NewNode);
-	void UnregisterNode(const FGuid& NodeGuid);
+	virtual void RegisterNode(const FGuid& NewGuid, UFlowNode* NewNode);
+	virtual void UnregisterNode(const FGuid& NodeGuid);
 
 	// Processes all nodes and creates map of all pin connections
 	void HarvestNodeConnections();
