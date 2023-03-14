@@ -96,7 +96,8 @@ private:
 	void OnBlueprintPreCompile(UBlueprint* Blueprint);
 	void OnBlueprintCompiled();
 
-	void OnExternalChange();
+protected:
+	virtual void OnExternalChange();
 
 public:
 	virtual void OnGraphRefresh();
