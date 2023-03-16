@@ -18,7 +18,8 @@ FText FAssetTypeActions_FlowAsset::GetName() const
 
 uint32 FAssetTypeActions_FlowAsset::GetCategories()
 {
-	return UFlowGraphSettings::Get()->bExposeFlowAssetCreation ? FFlowEditorModule::FlowAssetCategory : 0;
+	// UFlowGraphSettings::Get()->bExposeFlowAssetCreation ? FFlowEditorModule::FlowAssetCategory : 0
+	return 0;
 }
 
 UClass* FAssetTypeActions_FlowAsset::GetSupportedClass() const
