@@ -3,6 +3,7 @@
 #include "FlowAsset.h"
 
 #include "FlowMessageLog.h"
+#include "FlowModule.h"
 #include "FlowSettings.h"
 #include "FlowSubsystem.h"
 
@@ -283,9 +284,9 @@ void UFlowAsset::BroadcastDebuggerRefresh() const
 	RefreshDebuggerEvent.Broadcast();
 }
 
-void UFlowAsset::BroadcastRuntimeMessageAdded(const UFlowAsset* AssetInstance, const TSharedRef<FTokenizedMessage>& Message) const
+void UFlowAsset::BroadcastRuntimeMessageAdded(const TSharedRef<FTokenizedMessage>& Message)
 {
-	RuntimeMessageEvent.Broadcast(AssetInstance, Message);
+	RuntimeMessageEvent.Broadcast(this, Message);
 }
 #endif
 
@@ -503,35 +504,6 @@ UFlowAsset* UFlowAsset::GetParentInstance() const
 	return NodeOwningThisAssetInstance.IsValid() ? NodeOwningThisAssetInstance.Get()->GetFlowAsset() : nullptr;
 }
 
-#if WITH_EDITOR
-void UFlowAsset::LogError(const FString& MessageToLog, UFlowNode* Node) const
-{
-	if (RuntimeLog.IsValid())
-	{
-		const TSharedRef<FTokenizedMessage> TokenizedMessage = RuntimeLog.Get()->Error(*MessageToLog, Node);
-		BroadcastRuntimeMessageAdded(this, TokenizedMessage);
-	}
-}
-
-void UFlowAsset::LogWarning(const FString& MessageToLog, UFlowNode* Node) const
-{
-	if (RuntimeLog.IsValid())
-	{
-		const TSharedRef<FTokenizedMessage> TokenizedMessage = RuntimeLog.Get()->Warning(*MessageToLog, Node);
-		BroadcastRuntimeMessageAdded(this, TokenizedMessage);
-	}
-}
-
-void UFlowAsset::LogNote(const FString& MessageToLog, UFlowNode* Node) const
-{
-	if (RuntimeLog.IsValid())
-	{
-		const TSharedRef<FTokenizedMessage> TokenizedMessage = RuntimeLog.Get()->Note(*MessageToLog, Node);
-		BroadcastRuntimeMessageAdded(this, TokenizedMessage);
-	}
-}
-#endif
-
 FFlowAssetSaveData UFlowAsset::SaveInstance(TArray<FFlowAssetSaveData>& SavedFlowInstances)
 {
 	FFlowAssetSaveData AssetRecord;
@@ -618,3 +590,50 @@ bool UFlowAsset::IsBoundToWorld_Implementation()
 {
 	return bWorldBound;
 }
+
+#if WITH_EDITOR
+void UFlowAsset::LogError(const FString& MessageToLog, UFlowNode* Node)
+{
+	// this is runtime log which is should be only called on runtime instances of asset
+	if (TemplateAsset == nullptr)
+	{
+		UE_LOG(LogFlow, Log, TEXT("Attempted to use Runtime Log on template asset %s"), *MessageToLog);
+	}
+
+	if (RuntimeLog.Get())
+	{
+		const TSharedRef<FTokenizedMessage> TokenizedMessage = RuntimeLog.Get()->Error(*MessageToLog, Node);
+		BroadcastRuntimeMessageAdded(TokenizedMessage);
+	}
+}
+
+void UFlowAsset::LogWarning(const FString& MessageToLog, UFlowNode* Node)
+{
+	// this is runtime log which is should be only called on runtime instances of asset
+	if (TemplateAsset == nullptr)
+	{
+		UE_LOG(LogFlow, Log, TEXT("Attempted to use Runtime Log on template asset %s"), *MessageToLog);
+	}
+
+	if (RuntimeLog.Get())
+	{
+		const TSharedRef<FTokenizedMessage> TokenizedMessage = RuntimeLog.Get()->Warning(*MessageToLog, Node);
+		BroadcastRuntimeMessageAdded(TokenizedMessage);
+	}
+}
+
+void UFlowAsset::LogNote(const FString& MessageToLog, UFlowNode* Node)
+{
+	// this is runtime log which is should be only called on runtime instances of asset
+	if (TemplateAsset == nullptr)
+	{
+		UE_LOG(LogFlow, Log, TEXT("Attempted to use Runtime Log on template asset %s"), *MessageToLog);
+	}
+
+	if (RuntimeLog.Get())
+	{
+		const TSharedRef<FTokenizedMessage> TokenizedMessage = RuntimeLog.Get()->Note(*MessageToLog, Node);
+		BroadcastRuntimeMessageAdded(TokenizedMessage);
+	}
+}
+#endif
