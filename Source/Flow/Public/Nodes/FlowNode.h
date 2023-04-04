@@ -53,6 +53,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "FlowNode")
 	EFlowNodeStyle NodeStyle;
 
+	/* Alex: Added this tag for fast comparison in our editor widgets */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FlowNode")
+	FName NodeTag = "None";
+
 	uint8 bCanDelete : 1;
 	uint8 bCanDuplicate : 1;
 
@@ -355,7 +359,7 @@ protected:
 #if WITH_EDITOR
 public:
 	UFlowNode* GetInspectedInstance() const;
-
+	
 	TMap<uint8, FPinRecord> GetWireRecords() const;
 	TArray<FPinRecord> GetPinRecords(const FName& PinName, const EEdGraphPinDirection PinDirection) const;
 
