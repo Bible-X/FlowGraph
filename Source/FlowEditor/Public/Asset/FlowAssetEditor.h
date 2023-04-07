@@ -122,7 +122,7 @@ protected:
 	
 	virtual void RefreshAsset();
 
-private:
+public:
 	void ValidateAsset_Internal();
 
 protected:
