@@ -16,6 +16,7 @@ class FFlowMessageLog;
 class SFlowPalette;
 class UFlowAsset;
 class UFlowGraphNode;
+class UFlowNode;
 
 class IDetailsView;
 class SDockableTab;
@@ -122,11 +123,17 @@ protected:
 	
 	virtual void RefreshAsset();
 
+//---------------------------------------------------------------------------------------------------------- BX Code:
 public:
+	void RequestValidateAsset(); // FlowNode widgets can request reconsidering validation after they have been reconstructed
+//---------------------------------------------------------------------------------------------------------- BX Code:
+	
+private:
 	void ValidateAsset_Internal();
 
 protected:
 	virtual void ValidateAsset(FFlowMessageLog& MessageLog);
+	
 
 #if ENABLE_SEARCH_IN_ASSET_EDITOR
 	virtual void SearchInAsset();

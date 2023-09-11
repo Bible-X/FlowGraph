@@ -33,6 +33,7 @@ class FLOW_API UFlowNode : public UObject, public IVisualLoggerDebugSnapshotInte
 	friend class UFlowGraphSchema;
 	friend class SFlowInputPinHandle;
 	friend class SFlowOutputPinHandle;
+	friend class UC_FlowNodeBase; //BX Code!! (Used in the UFlowNode_CheckPointBase::CleanupNodes function)
 
 //////////////////////////////////////////////////////////////////////////
 // Node

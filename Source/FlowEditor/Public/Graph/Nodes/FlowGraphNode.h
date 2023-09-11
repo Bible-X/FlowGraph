@@ -54,7 +54,7 @@ UCLASS()
 class FLOWEDITOR_API UFlowGraphNode : public UEdGraphNode
 {
 	GENERATED_UCLASS_BODY()
-
+	friend class UCFlowGraphNodeBase;
 //////////////////////////////////////////////////////////////////////////
 // Flow node
 

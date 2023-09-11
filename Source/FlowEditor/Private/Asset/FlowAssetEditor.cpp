@@ -322,6 +322,8 @@ void FFlowAssetEditor::InitFlowAssetEditor(const EToolkitMode::Type Mode, const 
 	InitAssetEditor(Mode, InitToolkitHost, TEXT("FlowEditorApp"), StandaloneDefaultLayout, bCreateDefaultStandaloneMenu, bCreateDefaultToolbar, ObjectToEdit, false);
 
 	RegenerateMenusAndToolbars();
+	
+	ValidateAsset_Internal();
 }
 
 void FFlowAssetEditor::CreateToolbar()
@@ -379,6 +381,11 @@ void FFlowAssetEditor::RefreshAsset()
 	CastChecked<UFlowGraph>(FlowAsset->GetGraph())->RefreshGraph();
 }
 
+void FFlowAssetEditor::RequestValidateAsset()
+{
+	ValidateAsset_Internal();
+}
+
 void FFlowAssetEditor::ValidateAsset_Internal()
 {
 	FFlowMessageLog LogResults;
@@ -396,7 +403,10 @@ void FFlowAssetEditor::ValidateAsset_Internal()
 
 void FFlowAssetEditor::ValidateAsset(FFlowMessageLog& MessageLog)
 {
-	FlowAsset->ValidateAsset(MessageLog);
+	if (FlowAsset)
+	{
+		FlowAsset->ValidateAsset(MessageLog);
+	}
 }
 
 #if ENABLE_SEARCH_IN_ASSET_EDITOR
